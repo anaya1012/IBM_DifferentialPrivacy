@@ -1,0 +1,14 @@
+.home{
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    left:700px;
+}
+
+.chatbot{
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    left:900px;
+}
+

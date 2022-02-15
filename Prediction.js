@@ -1,9 +1,33 @@
 import './Prediction.css';
 import React, { Component } from 'react';
 import CanvasJSReact from './assets/canvasjs.react';
+import axios from 'axios';
+import { variables } from './Variables';
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
- 
+
 class Prediction extends Component {
+	constructor(props){
+        super(props);
+        this.state={
+            coordinates:[]
+			
+        }
+    }
+    
+    refreshList(){
+        axios.get(variables.API_URL+'predict')
+        .then(response => {
+            console.log(response.data);
+            this.setState({
+                coordinates: response.data
+            });
+            
+        });
+        console.log(this.state.coordinates)
+    }
+    componentDidMount(){
+        this.refreshList();
+    }
 	render() {
 		const options = {
 			animationEnabled: true,

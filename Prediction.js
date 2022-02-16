@@ -39,16 +39,26 @@ class Prediction extends Component {
 			}
 			
 		}
-		console.log(result)
-		console.log(this.state.res)
-		console.log(this.state.coordinates.x)
-		console.log(typeof this.state.coordinates.x)
 		return result;
 	}
+
+	
 	render() {
 		const result = this.setDatapoints();
-		console.log(result)
-		const options = {
+		var y1, y2, y3, y1_act, y2_act, y3_act;
+		{if(typeof this.state.coordinates.res != 'undefined')
+		{
+			y1 = this.state.coordinates.res[0]
+			y2 = this.state.coordinates.res[1]
+			y3 = this.state.coordinates.res[2]
+		}}
+		{if(typeof this.state.coordinates.actual != 'undefined')
+		{
+			y1_act = this.state.coordinates.actual[0]
+			y2_act = this.state.coordinates.actual[1]
+			y3_act = this.state.coordinates.actual[2]
+		}}
+		const options_scatter = {
 			animationEnabled: true,
 			exportEnabled: true,
 			zoomEnabled: true,
@@ -72,15 +82,68 @@ class Prediction extends Component {
 				dataPoints: result
 			}]
 		}
+
+		const options_bar = {
+			animationEnabled: true,
+			exportEnabled: true,
+			zoomEnabled: true,
+			theme: "light1", // "light1", "dark1", "dark2"
+			title:{
+				text: "Actual results vs predicted results"
+			},
+			axisY: {
+				title: "Actual",
+				interlacedColor: "Azure",
+				tickLength: 10,
+				interval:20
+			  },
+			  axisY2: {
+				title: "Predicted",
+				tickLength: 10,
+				interval: 20
+			  },
+			  axisX: {
+			  },
+			  data: [
+				{ 
+				  showInLegend: true,           
+				  legendText: "Predicted disease",
+				  dataPoints: [
+				  {label: "Mitochondrial GID", y: y1 },
+				  {label: "Multifactorial GID", y: y2},
+				  {label: "Single-gene ID", y: y3},
+				  
+				  ]
+				},
+				{        
+				  showInLegend: true, 
+				  legendText: "Actual disease",
+				  axisYType: "secondary",
+				  dataPoints: [
+				  {label: "Mitochondrial GID", y: y1_act },
+				  {label: "Multifactorial GID", y: y2_act},
+				  {label: "Single-gene ID", y: y3_act},
+				  ]
+				}
+		  
+				]
+			
+		}
 		
 		return (
-		<div className="chart">
-			
-			<CanvasJSChart  options = {options} 
-				/* onRef={ref => this.chart = ref} */
-			/>
-			{/*You can get reference to the chart instance as shown above using onRef. This allows you to access all chart properties and methods*/}
-		</div>
+			<>
+				<div className="chart">
+					
+					<CanvasJSChart  options = {options_scatter} 
+						/* onRef={ref => this.chart = ref} */
+					/>
+					{/*You can get reference to the chart instance as shown above using onRef. This allows you to access all chart properties and methods*/}
+				</div>
+	
+				<div className='barGraph'>
+					<CanvasJSChart  options = {options_bar} />
+				</div>
+			</>
 		);
 	}
 }

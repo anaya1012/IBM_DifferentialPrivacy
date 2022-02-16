@@ -13,9 +13,9 @@ from diffprivlib.models import GaussianNB as GNB
 @csrf_exempt
 def dashboardApi(request):
     if request.method == 'GET':
-        y,y_dp=plot_predictions()
+        y,y_dp,res,actual = plot_predictions()
         x_axis = list(range(0,100))
-        return JsonResponse({'x':x_axis,'y':y})
+        return JsonResponse({'x':x_axis,'y':y, 'res': res, 'actual': actual })
 def plot_predictions():
     GENETICS_DATASET = pd.read_csv(r"D:\anaya\IBM_Group8_DifferentialPrivacy\train.csv")
     dataset = GENETICS_DATASET.copy()
@@ -109,6 +109,16 @@ def plot_predictions():
     clf.fit(x_train, y_train)
     y_pred_dp=clf.predict(x_test)
     print("Test accuracy: %f" % clf.score(x_test, y_test))
-    print("y peedddddd",y_pred.tolist()[:100])
-    return y_pred.tolist()[:100],y_pred_dp.tolist()[:100]
-    
+    y_pred_list = y_pred.tolist()[:100]
+    y_pred_dp_list = y_pred_dp.tolist()[:100]
+    results = [y_pred_list.count(0), y_pred_list.count(1), y_pred_list.count(2)]
+    disease = [0,1,2]
+
+    y_test_list = y_test['Genetic Disorder'].tolist()[:100]
+    actual = [y_test_list.count(0), y_test_list.count(1), y_test_list.count(2)]
+    #plt.bar(disease, results)
+    #plt.show()
+    return y_pred_list , y_pred_dp_list, results, actual
+
+
+

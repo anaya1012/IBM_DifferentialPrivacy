@@ -1,7 +1,6 @@
-from re import X
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponse
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,31 +10,27 @@ from sklearn.naive_bayes import GaussianNB
 from diffprivlib.models import GaussianNB as GNB
 # Create your views here.
 
-@csrf_exempt
+@csrf_exempt 
 def dashboardApi(request):
+    
+    if request.method == 'POST':
+        data = request.POST
+        epsilon = list(data.keys())[0]
+        request.session['epsilon'] = epsilon
+        print(request.session.get('epsilon'))
+        print('posssssttt methoddd', epsilon)
+        return HttpResponse('Successful')
     if request.method == 'GET':
-        y,y_dp=plot_predictions()
-        print("y_pred is::::",y)
+        eps = request.session.get('epsilon')
+
+        print("gettttt methhoddd",eps)
+        y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions()
         x_axis = list(range(0,100))
-        y_axis = y[:100]
-        plt.scatter(x_axis, y_axis)
-        plt.title("Sadha prediction")
-        plt.xlabel("Results")
-        plt.ylabel("Classes")
-        plt.figure(figsize =(10,6))
-        plt.show()
         
-        x_axis = list(range(0,100))
-        y_axis = y_dp[:100]
-        plt.scatter(x_axis, y_axis)
-        plt.title("Differentially private prediction")
-        plt.xlabel("Results")
-        plt.ylabel("Classes")
-        plt.figure(figsize =(10,6))
-        plt.show()
-        return JsonResponse({'x':x_axis,'y':y_axis})
-def plot_predictions():
-    GENETICS_DATASET = pd.read_csv(r"E:\vallari\btech_project\train.csv")
+        return JsonResponse({'x':x_axis,'y':y,'y_dp':y_dp,'acc_dp':ac_score_dp,'acc':ac_score,'res': res, 'res_dp': res_dp,'actual': actual,'rem':100-(ac_score),'rem_dp':100-(ac_score_dp)})
+def plot_predictions(eps=1):
+    print("in defff",eps)
+    GENETICS_DATASET = pd.read_csv(r"C:\Users\User\Geneticbiobank\Geneticbiobank\geneticbiobank\backend\train.csv")
     dataset = GENETICS_DATASET.copy()
     # Drop unwanted fields
     dataset.drop(["Test 1","Test 2","Test 3","Test 4","Test 5","Status","Parental consent","Place of birth","Follow-up",
@@ -119,13 +114,23 @@ def plot_predictions():
     clf = GaussianNB()
     clf.fit(x_train, y_train)
     y_pred=clf.predict(x_test)
-    print("Test accuracy: %f" % clf.score(x_test, y_test))
+    acc_score=clf.score(x_test, y_test)
 
    
     # differential privacy
-    clf = GNB()
+    clf = GNB(epsilon = int(eps))
     clf.fit(x_train, y_train)
     y_pred_dp=clf.predict(x_test)
-    print("Test accuracy: %f" % clf.score(x_test, y_test))
+    acc_score_dp= clf.score(x_test, y_test)
+    y_pred_list = y_pred.tolist()[:100]
+    y_pred_dp_list = y_pred_dp.tolist()[:100]
+    results = [y_pred_list.count(0), y_pred_list.count(1), y_pred_list.count(2)]
+    results_dp=[y_pred_dp_list.count(0), y_pred_dp_list.count(1), y_pred_dp_list.count(2)]
+    disease = [0,1,2]
 
-    return y_pred,y_pred_dp
+    y_test_list = y_test['Genetic Disorder'].tolist()[:100]
+    actual = [y_test_list.count(0), y_test_list.count(1), y_test_list.count(2)]
+    #plt.bar(disease, results)
+    #plt.show()
+    return y_pred_list , y_pred_dp_list, results,results_dp, actual,acc_score*100,acc_score_dp*100
+

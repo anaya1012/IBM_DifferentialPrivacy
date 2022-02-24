@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-no-undef */
-/* eslint-disable no-dupe-keys */
 /* eslint-disable react/style-prop-object */
 import './Prediction.css';
 import React, { Component } from 'react';
@@ -7,18 +5,17 @@ import CanvasJSReact from './assets/canvasjs.react';
 import axios from 'axios';
 import { variables } from './Variables';
 
-import Card from '@material-ui/core/Card';
+import {Slider} from '@material-ui/core'
 
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
-class Prediction extends Component {
+class WithDP extends Component {
 	constructor(props){
         super(props);
-		this.chartRef=React.createRef();
         this.state={
             coordinates:[],
 			res:[],
-			
+            res_dp:[]
         }
     }
     
@@ -43,15 +40,11 @@ class Prediction extends Component {
 		for (let i = 0; i < 100; i++) {
 			if(typeof this.state.coordinates.x != 'undefined')
 			{
-				result.push({x:this.state.coordinates.x[i],y:(this.state.coordinates.y[i])+1})
+				result.push({x:this.state.coordinates.x[i],y:(this.state.coordinates.y_dp[i])+1})
 			}
 			
 		}
-		/*console.log(result)
-		console.log(this.state.res)
-		console.log(this.state.coordinates.x)
-		console.log(typeof this.state.coordinates.x)
-		*/
+		
 		return result;
 	}
 	handleChange= (e,val)=>{		
@@ -72,9 +65,9 @@ class Prediction extends Component {
 		// eslint-disable-next-line no-lone-blocks
 		{if(typeof this.state.coordinates.res != 'undefined')
 		{
-			y1 = this.state.coordinates.res[0]
-			y2 = this.state.coordinates.res[1]
-			y3 = this.state.coordinates.res[2]
+			y1 = this.state.coordinates.res_dp[0]
+			y2 = this.state.coordinates.res_dp[1]
+			y3 = this.state.coordinates.res_dp[2]
 		}}
 		// eslint-disable-next-line no-lone-blocks
 		{if(typeof this.state.coordinates.actual != 'undefined')
@@ -86,7 +79,7 @@ class Prediction extends Component {
 		// eslint-disable-next-line no-lone-blocks
 		{if(typeof this.state.coordinates.acc != undefined)
 			{
-				accuracy_score=this.state.coordinates.acc;
+				accuracy_score=this.state.coordinates.acc_dp;
 				
 			}
 		}
@@ -94,10 +87,10 @@ class Prediction extends Component {
 		{if(typeof this.state.coordinates.rem != undefined)
 			{
 				
-				remaining=this.state.coordinates.rem;
+				remaining=this.state.coordinates.rem_dp;
 			}
 		}
-		
+		console.log(remaining)
 		const options_bar = {
 			animationEnabled: true,
 			exportEnabled: true,
@@ -151,7 +144,7 @@ class Prediction extends Component {
 			zoomEnabled: true,
 			theme: "light1", // "light1", "dark1", "dark2"
 			title:{
-				text: "Prediciton results without Differential Privacy"
+				text: "Prediciton results with Differential Privacy"
 			},
 			toolTip:{   
 				
@@ -217,7 +210,7 @@ subtitles: [{
 		startAngle: 60,
 		//innerRadius: 60,
 		indexLabelFontSize: 17,
-		startAngle: 90,
+		
 		toolTipContent: "<b>{label} </b> {y} (#percent%)",
 		dataPoints: [
 			{ y: accuracy_score, label: "" },
@@ -227,50 +220,43 @@ subtitles: [{
 	};
 		return (
 			<>
-			  
+			 
 		<div className="chart">
-		<Card style={{
-							boxShadow: "0 5px 8px 0",
-						}}>
+			
 			<CanvasJSChart  options = {options_scatter} 
-				/* onRef={ref => this.chart = ref} */
+				 onRef={ref => this.chart = ref} 
 			/>
-			</Card>
 			</div>
 			{/*You can get reference to the chart instance as shown above using onRef. This allows you to access all chart properties and methods*/}
 			
 			<div className='graphs'>
 			
 			<div className="doughnutChart">
-			<Card style={{
-							width:"98%",
-							boxShadow: "0 5px 8px 0",
-						}}>
 			<CanvasJSChart options = {options_doughnut} 
-				 onRef={ref => this.chart = ref} 
-				// onRef={this.setState({chartRef:this.chart})}
+				/* onRef={ref => this.chart = ref} */
 			/>
-			 {/* {console.log(this.chart)}
-			 {this.setState({chartRef:this.chart})}
-			 {console.log(this.state.chartRef)} */}
-			 {/* {this.chartRef=this.chart.current} */}
-			</Card>
 		</div>
 		<div className='barGraph' >
-		<Card style={{
-							width:"98%",
-							boxShadow: "0 5px 8px 0",
-						}}>
 					<CanvasJSChart  options = {options_bar} />
-					</Card>
 				</div>
 				</div>
-				
-				
+				<div className='slider'>
+				<Slider 
+					onChange = {this.handleChange}
+					onChangeCommitted = {this.handleStop}
+					aria-label="Epsilon"
+					defaultValue={30}	
+					valueLabelDisplay="auto"
+					step={10}
+					marks
+					min={10}
+					max={110}
+				/>
+				</div>
 		</>
 		);
 	}
 }
 
 
-export default Prediction;
+export default WithDP;

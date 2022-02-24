@@ -1,5 +1,23 @@
 .chart{
-    margin-left:300px;
-    width: 1000px;
+    margin-left:280px;
+    margin-right: 20px;
     margin-top:50px;
+}
+.graphs{
+    display: flex;
+    margin-left:280px;
+    margin-top:50px;
+    margin-right: 20px;
+}
+.doughnutChart{
+    flex: 1;
+    width: 50%;
+}
+.barGraph{
+    flex: 1;
+    width: 50%;
+}
+.slider{
+    width: 700px;
+    margin-left:300px;
 }

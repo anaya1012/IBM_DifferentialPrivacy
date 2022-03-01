@@ -1,7 +1,8 @@
 
-from .views import dashboardApi
+from .views import dashboardApi,visualizeattributes
 from django.urls import path
 
 urlpatterns = [
-   path('predict',dashboardApi),
+   path('prediction',dashboardApi),
+   path('visualize',visualizeattributes),
 ]

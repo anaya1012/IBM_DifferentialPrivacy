@@ -4,11 +4,24 @@ from django.http.response import JsonResponse, HttpResponse
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn import preprocessing
+from sklearn import datasets, preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from diffprivlib.models import GaussianNB as GNB
 # Create your views here.
+
+@csrf_exempt 
+def visualizeattributes(request):
+    
+    if request.method == 'POST':
+        data = request.POST
+        attribute = list(data.keys())[0]
+        request.session['attribute'] = attribute
+        print(request.session.get('attribute'))
+        dataset=preprocess()
+        attributelist=dataset[attribute].tolist()[:100]
+        results = [attributelist.count(0), attributelist.count(1), attributelist.count(2)]
+        return JsonResponse({'y':results})
 
 @csrf_exempt 
 def dashboardApi(request):
@@ -17,19 +30,19 @@ def dashboardApi(request):
         data = request.POST
         epsilon = list(data.keys())[0]
         request.session['epsilon'] = epsilon
-        print(request.session.get('epsilon'))
-        print('posssssttt methoddd', epsilon)
+        #print(request.session.get('epsilon'))
+        #print('posssssttt methoddd', epsilon)
         return HttpResponse('Successful')
     if request.method == 'GET':
         eps = request.session.get('epsilon')
 
-        print("gettttt methhoddd",eps)
+        #print("gettttt methhoddd",eps)
         y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions()
         x_axis = list(range(0,100))
         
         return JsonResponse({'x':x_axis,'y':y,'y_dp':y_dp,'acc_dp':ac_score_dp,'acc':ac_score,'res': res, 'res_dp': res_dp,'actual': actual,'rem':100-(ac_score),'rem_dp':100-(ac_score_dp)})
-def plot_predictions(eps=1):
-    print("in defff",eps)
+
+def preprocess():
     GENETICS_DATASET = pd.read_csv(r"C:\Users\User\Geneticbiobank\Geneticbiobank\geneticbiobank\backend\train.csv")
     dataset = GENETICS_DATASET.copy()
     # Drop unwanted fields
@@ -101,6 +114,12 @@ def plot_predictions(eps=1):
     dataset["Genetic Disorder"]= label_encoder.fit_transform(dataset["Genetic Disorder"])
     dataset["Disorder Subclass"]= label_encoder.fit_transform(dataset["Disorder Subclass"])
     dataset["Gender"]= label_encoder.fit_transform(dataset["Gender"])
+
+    return dataset
+
+def plot_predictions(eps=1):
+    #print("in defff",eps)
+    dataset=preprocess()
     
     x=dataset.iloc[:,:-2]
     y = dataset[['Genetic Disorder']]

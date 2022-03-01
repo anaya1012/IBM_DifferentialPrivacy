@@ -5,32 +5,74 @@ import React, { Component } from 'react';
 import CanvasJSReact from './assets/canvasjs.react';
 import axios from 'axios';
 import { variables } from './Variables';
-
+import Switch from 'react-switch';
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 class Visualize extends Component {
 
   constructor(props){
     super(props);
-
+    
+    this.handleChange = this.handleChange.bind(this);
     this.state={
+      checked: false,
       selected:'',
       coordinates:[]
     }
 }
+setDatapoints(){
+
+  const result=[];
+  // console.log(this.state.coordinates.x)
+  // console.log(this.state.coordinates)
+  if(typeof this.state.coordinates.x != 'undefined')
+    {
+      for (let i = 0; i < this.state.coordinates.x.length; i++) {
+        console.log(this.state.coordinates.x[i])
+          result.push({x:this.state.coordinates.x[i],y:(this.state.coordinates.y[i])})
+        }
+    }
+    console.log(result)
+  return result;
+}
+handleChange(checked) {
+  this.setState({ checked });
+  console.log(this.state.checked)
+  axios.post(variables.API_URL+'visualize',  [this.state.selected,this.state.checked]).then(response => this.setState({ coordinates: response.data }));
+}
   render(){
   //const [selected, setSelected] = React.useState("");
-  var y1,y2,y3;
-  {if(typeof this.state.coordinates.y != 'undefined')
-		{
-			y1 = this.state.coordinates.y[0]
-			y2 = this.state.coordinates.y[1]
-			y3 = this.state.coordinates.y[2]
-		}}
+  const dataPoints=this.setDatapoints();
+  console.log(dataPoints)
    const getattributevalue=()=>{
-    axios.post(variables.API_URL+'visualize', this.state.selected)
-    .then(response => this.setState({ coordinates: response.data }));
-     console.log(this.state.coordinates.y)
+
+  //   const requestOptions = {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ selected: this.state.selected,dpcheck: this.state.checked })
+  // };
+  // fetch(variables.API_URL+'visualize', requestOptions)
+  //     .then(response => response.json())
+  //     .then(data => this.setState({  coordinates:data }));
+
+
+    // axios({
+    //   method: 'post',
+    //   url: variables.API_URL+'visualize',
+    //   body: JSON.stringify({
+    //     selected: this.state.selected,
+    //     dpcheck: this.state.checked 
+    //   })
+    // }).then(response => this.setState({ coordinates: response.data }));
+
+
+    // const data={
+    //        selected: this.state.selected,
+    //       //  dpcheck: this.state.checked 
+    //      };
+    // axios.post(variables.API_URL+'visualize', {'abc':this.state.selected})
+    // .then(response => this.setState({ coordinates: response.data }));
+    //  //console.log(this.state.coordinates.y)
    }
   const changeSelectOptionHandler = (event) => {
     
@@ -102,29 +144,45 @@ class Visualize extends Component {
     title:{
       text: "Actual results vs predicted results"
     },
+    toolTip:{   
+				
+      shared: true,
+      contentFormatter: function(e){
+        
+        var content = " ";
+        const	categoryname = this.state.coordinates.x_labels
+         for (var i = 0; i < e.entries.length; i++) {
+          content += e.entries[i].dataPoint.x +" : " + "<strong>" + categoryname[e.entries[i].dataPoint.y] + "</strong>";
+          content += "<br/>";
+        }
+        return content;
+         
+          
+      }
+    },
     axisY: {
-      title: "Actual",
+      title: "Attribute",
       interlacedColor: "Azure",
       tickLength: 10,
-      interval:20
+      interval:5000
       },
-      axisY2: {
-      title: "Predicted",
-      tickLength: 10,
-      interval: 20
-      },
+    
       axisX: {
+        title: "Categories",
+      tickLength: 10,
+      interval:1
+      // labelFormatter: function(e){
+
+      //   const	diseaseName = ['Yes','No']
+      //    return diseaseName[e.value];
+      // },
       },
       data: [
       { 
         showInLegend: true,           
         legendText: "Predicted disease",
-        dataPoints: [
-        {label: "0", y: y1 },
-        {label: "1", y: y2},
-        {label: "2", y: y3},
-        
-        ]
+        dataPoints: dataPoints 
+      
       },
       
     
@@ -195,6 +253,23 @@ class Visualize extends Component {
 				 onRef={ref => this.chart = ref} 
 				// onRef={this.setState({chartRef:this.chart})}
 			/> 
+      <label htmlFor="material-switch">
+      <Switch
+        checked={this.state.checked}
+        onChange={this.handleChange}
+        onColor="#86d3ff"
+        onHandleColor="#2693e6"
+        handleDiameter={30}
+        uncheckedIcon={false}
+        checkedIcon={false}
+        boxShadow="0px 1px 5px rgba(0, 0, 0, 0.6)"
+        activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
+        height={20}
+        width={48}
+        className="react-switch"
+        id="material-switch"
+      />
+    </label>
     </>
   );
           }

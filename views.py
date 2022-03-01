@@ -8,21 +8,54 @@ from sklearn import datasets, preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from diffprivlib.models import GaussianNB as GNB
+from diffprivlib import tools as tools
 # Create your views here.
+def histWithdp(attribute):
+    print("In with DP")
+    dataset = preprocess()
+    dp_hist, dp_bins = tools.histogram(dataset[attribute])
+    print("coordinates",dp_hist)
+    return dp_hist
+
+def histWithoutdp(attribute):
+    print("In without dp")
+    dataset = preprocess()
+    hist = np.histogram(dataset[attribute])
+    print("coordintaes withour",hist)
+    return hist
 
 @csrf_exempt 
 def visualizeattributes(request):
-    
+    print(request)
     if request.method == 'POST':
         data = request.POST
+        print(data)
         attribute = list(data.keys())[0]
+        dp = list(data.keys())[1]
         request.session['attribute'] = attribute
         print(request.session.get('attribute'))
         dataset=preprocess()
-        attributelist=dataset[attribute].tolist()[:100]
-        results = [attributelist.count(0), attributelist.count(1), attributelist.count(2)]
-        return JsonResponse({'y':results})
-
+        category_names=dataset[attribute].unique()
+        dataset=labelencode(dataset)
+        categories=dataset[attribute].unique()        
+        attributelist=dataset[attribute].tolist()
+        print(dp)
+        if(len(dp)!=0):
+            print(dp)
+            dataset = histWithdp()
+            x_axis = list(range(0,len(dataset)))
+            return JsonResponse({'x': x_axis,'y':dataset.tolist()})
+        else:
+            dataset = histWithoutdp()
+            x_axis = list(range(0,len(dataset)))
+            return JsonResponse({'x': x_axis,'y':dataset.tolist()})
+        # results=[]
+        # for i in categories:
+        #     results.append(attributelist.count(i))
+        # print("y: ",type(results),"x : ",type(categories))
+        #return JsonResponse({'x':categories.tolist(),'y':results,'x_labels':category_names.tolist()})
+        #return HttpResponse('Successful')
+        
 @csrf_exempt 
 def dashboardApi(request):
     
@@ -91,8 +124,9 @@ def preprocess():
     dataset["H/O substance abuse"].fillna(dataset["H/O substance abuse"].mode()[0], inplace=True)
 
     dataset.dropna(inplace=True,axis=0)
+    return dataset
 
-
+def labelencode(dataset):
     label_encoder = preprocessing.LabelEncoder()
     dataset["Genes in mother's side"]= label_encoder.fit_transform(dataset["Genes in mother's side"])
     dataset["Inherited from father"]= label_encoder.fit_transform(dataset["Inherited from father"])
@@ -118,9 +152,9 @@ def preprocess():
     return dataset
 
 def plot_predictions(eps=1):
-    #print("in defff",eps)
-    dataset=preprocess()
     
+    dataset=preprocess()
+    dataset=labelencode(dataset)
     x=dataset.iloc[:,:-2]
     y = dataset[['Genetic Disorder']]
     #x["sum of Mother's and fathers age avg"]=(x["Mother's age"]+x["Father's age"]) / 2

@@ -24,11 +24,12 @@ setDatapoints(){
 
   const result=[];
   // console.log(this.state.coordinates.x)
-  // console.log(this.state.coordinates)
+  
   if(typeof this.state.coordinates.x != 'undefined')
     {
+      console.log(this.state.coordinates)
       for (let i = 0; i < this.state.coordinates.x.length; i++) {
-        console.log(this.state.coordinates.x[i])
+        console.log(this.state.coordinates.x.length)
           result.push({x:this.state.coordinates.x[i],y:(this.state.coordinates.y[i])})
         }
     }
@@ -38,7 +39,7 @@ setDatapoints(){
 handleChange(checked) {
   this.setState({ checked });
   console.log(this.state.checked)
-  axios.post(variables.API_URL+'visualize',  [this.state.selected,this.state.checked]).then(response => this.setState({ coordinates: response.data }));
+  axios.post(variables.API_URL+'visualize',  { selected: this.state.selected,dpcheck: this.state.checked }).then(response => this.setState({ coordinates: response.data }));
 }
   render(){
   //const [selected, setSelected] = React.useState("");
@@ -46,6 +47,9 @@ handleChange(checked) {
   console.log(dataPoints)
    const getattributevalue=()=>{
 
+    axios.post(variables.API_URL+'visualize', { selected: this.state.selected,dpcheck: this.state.checked })
+    .then(response => this.setState({ coordinates: response.data }));
+    
   //   const requestOptions = {
   //     method: 'POST',
   //     headers: { 'Content-Type': 'application/json' },
@@ -170,12 +174,12 @@ handleChange(checked) {
       axisX: {
         title: "Categories",
       tickLength: 10,
-      interval:1
-      // labelFormatter: function(e){
+      interval:1,
+      labelFormatter: function(e){
 
-      //   const	diseaseName = ['Yes','No']
-      //    return diseaseName[e.value];
-      // },
+        const	categories = ['Yes','No']
+         return categories[e.value];
+      },
       },
       data: [
       { 

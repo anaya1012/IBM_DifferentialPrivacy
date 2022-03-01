@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse, HttpResponse
@@ -10,28 +11,29 @@ from sklearn.naive_bayes import GaussianNB
 from diffprivlib.models import GaussianNB as GNB
 from diffprivlib import tools as tools
 # Create your views here.
-def histWithdp(attribute):
+def histWithdp(dataset,attribute):
     print("In with DP")
-    dataset = preprocess()
-    dp_hist, dp_bins = tools.histogram(dataset[attribute])
+    #dataset = preprocess()
+    dp_hist, dp_bins = tools.histogram(dataset[attribute],bins=len(dataset[attribute].unique()))
     print("coordinates",dp_hist)
-    return dp_hist
+    return dp_hist.tolist()
 
-def histWithoutdp(attribute):
-    print("In without dp")
-    dataset = preprocess()
-    hist = np.histogram(dataset[attribute])
-    print("coordintaes withour",hist)
-    return hist
+def histWithoutdp(dataset,attribute):
+   #dataset[attribute].unique()
+    # dataset = preprocess()
+    hist,bins = np.histogram(dataset[attribute],bins=len(dataset[attribute].unique()))
+    print("hist::",hist)
+    #print(dataset['Maternal gene'])
+    return hist.tolist()
 
 @csrf_exempt 
 def visualizeattributes(request):
-    print(request)
+    
     if request.method == 'POST':
-        data = request.POST
-        print(data)
-        attribute = list(data.keys())[0]
-        dp = list(data.keys())[1]
+        data = json.loads(request.body)
+        print("type of data",type(json.loads(request.body)))
+        attribute = data['selected']
+        dp = data['dpcheck']
         request.session['attribute'] = attribute
         print(request.session.get('attribute'))
         dataset=preprocess()
@@ -40,15 +42,17 @@ def visualizeattributes(request):
         categories=dataset[attribute].unique()        
         attributelist=dataset[attribute].tolist()
         print(dp)
-        if(len(dp)!=0):
+        if(dp==True):
             print(dp)
-            dataset = histWithdp()
-            x_axis = list(range(0,len(dataset)))
-            return JsonResponse({'x': x_axis,'y':dataset.tolist()})
+            res = histWithdp(dataset,attribute)
+            print("res: ",res)
+            x_axis = list(range(0,len(res)))
+            return JsonResponse({'x': x_axis,'y':res})
         else:
-            dataset = histWithoutdp()
-            x_axis = list(range(0,len(dataset)))
-            return JsonResponse({'x': x_axis,'y':dataset.tolist()})
+            res = histWithoutdp(dataset,attribute)
+            print("res: ",res)
+            x_axis = list(range(0,len(res)))
+            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist()})
         # results=[]
         # for i in categories:
         #     results.append(attributelist.count(i))

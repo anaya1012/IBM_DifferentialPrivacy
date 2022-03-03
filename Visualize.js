@@ -240,6 +240,7 @@ handleDisplay=()=>{
         padding: "16px",
         margin: "16px",
         marginLeft:"400px",
+        
       }}
     >
       <form class="form">

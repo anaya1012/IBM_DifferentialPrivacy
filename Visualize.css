@@ -19,7 +19,9 @@
 }
 .attribute{
     flex:1;
+    font-size:larger;
 }
 .graphselect{
     flex:1;
+    font-size: larger;
 }

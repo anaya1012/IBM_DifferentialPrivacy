@@ -1,0 +1,25 @@
+.react-switch{
+    margin-left: 950px;
+    margin-top:20px;
+}
+
+.chart{
+    margin-left: 300px; 
+    height: 190% 
+}
+
+.displayText{
+    font-size: larger;
+    margin-left: 900px;
+    margin-right:600px;
+    margin-top: 20px;
+}
+.form{
+    display: flex;
+}
+.attribute{
+    flex:1;
+}
+.graphselect{
+    flex:1;
+}

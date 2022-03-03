@@ -47,7 +47,7 @@ def visualizeattributes(request):
             res = histWithdp(dataset,attribute)
             print("res: ",res)
             x_axis = list(range(0,len(res)))
-            return JsonResponse({'x': x_axis,'y':res})
+            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist()})
         else:
             res = histWithoutdp(dataset,attribute)
             print("res: ",res)

@@ -1,11 +1,10 @@
-/* eslint-disable no-lone-blocks */
-/* eslint-disable react/jsx-no-undef */
-
 import React, { Component } from 'react';
 import CanvasJSReact from './assets/canvasjs.react';
 import axios from 'axios';
 import { variables } from './Variables';
 import Switch from 'react-switch';
+import './Visualize.css';
+import Card from '@material-ui/core/Card';
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 class Visualize extends Component {
@@ -15,6 +14,9 @@ class Visualize extends Component {
     
     this.handleChange = this.handleChange.bind(this);
     this.state={
+      type: 'Bar graph',
+      displayTxt: "",
+      displayChart: false,
       checked: false,
       selected:'',
       coordinates:[]
@@ -27,72 +29,89 @@ setDatapoints(){
   
   if(typeof this.state.coordinates.x != 'undefined')
     {
-      console.log(this.state.coordinates)
+      //console.log(this.state.coordinates)
       for (let i = 0; i < this.state.coordinates.x.length; i++) {
-        console.log(this.state.coordinates.x.length)
+        //console.log(this.state.coordinates.x.length)
           result.push({x:this.state.coordinates.x[i],y:(this.state.coordinates.y[i])})
         }
     }
-    console.log(result)
+    //console.log(result)
+  return result;
+}
+setDatapointsPie(){
+
+  const result=[];
+  console.log(this.state.coordinates)
+  
+  if(typeof this.state.coordinates.x != 'undefined')
+    {
+      //console.log(this.state.coordinates)
+      for (let i = 0; i < this.state.coordinates.x.length; i++) {
+        //console.log(this.state.coordinates.x.length)
+          result.push({y:this.state.coordinates.y[i],label:(this.state.coordinates.x_labels[i])})
+        }
+    }
+    //console.log(result)
   return result;
 }
 handleChange(checked) {
   this.setState({ checked });
-  console.log(this.state.checked)
-  axios.post(variables.API_URL+'visualize',  { selected: this.state.selected,dpcheck: this.state.checked }).then(response => this.setState({ coordinates: response.data }));
+  //console.log(checked)
+  axios.post(variables.API_URL+'visualize',  { selected: this.state.selected,dpcheck: checked }).then(response => this.setState({ coordinates: response.data })).then(this.chart.render());
+}
+
+handleDisplay=()=>{
+  var text="";
+  if(typeof this.state.coordinates.x != 'undefined')
+  {
+    for (let i = 0; i < this.state.coordinates.x.length; i++) {
+      text = text.concat(this.state.coordinates.x_labels[i],":",this.state.coordinates.y[i],"\n")
+    }
+  }
+  console.log(text)
+  console.log(typeof text)
+  return text
+
 }
   render(){
   //const [selected, setSelected] = React.useState("");
   const dataPoints=this.setDatapoints();
-  console.log(dataPoints)
-   const getattributevalue=()=>{
+  const dataPointsPie = this.setDatapointsPie();
+  const display = this.handleDisplay();
 
-    axios.post(variables.API_URL+'visualize', { selected: this.state.selected,dpcheck: this.state.checked })
-    .then(response => this.setState({ coordinates: response.data }));
+  // var display
+  // if(typeof this.state.displayTxt != 'undefined')
+  // {
+  //   display = this.state.displayTxt
+  // }
+  //console.log(dataPoints)
+  //console.log(dataPointsPie)
+   const getattributevalue=(event)=>{
+
     
-  //   const requestOptions = {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({ selected: this.state.selected,dpcheck: this.state.checked })
-  // };
-  // fetch(variables.API_URL+'visualize', requestOptions)
-  //     .then(response => response.json())
-  //     .then(data => this.setState({  coordinates:data }));
-
-
-    // axios({
-    //   method: 'post',
-    //   url: variables.API_URL+'visualize',
-    //   body: JSON.stringify({
-    //     selected: this.state.selected,
-    //     dpcheck: this.state.checked 
-    //   })
-    // }).then(response => this.setState({ coordinates: response.data }));
-
-
-    // const data={
-    //        selected: this.state.selected,
-    //       //  dpcheck: this.state.checked 
-    //      };
-    // axios.post(variables.API_URL+'visualize', {'abc':this.state.selected})
-    // .then(response => this.setState({ coordinates: response.data }));
-    //  //console.log(this.state.coordinates.y)
+    this.setState({
+      type: event.target.value
+  });
+ 
    }
   const changeSelectOptionHandler = (event) => {
-    
     this.setState({
       selected: event.target.value
   });
-  this.chart.render();
+    axios.post(variables.API_URL+'visualize', { selected: event.target.value,dpcheck: this.state.checked })
+    .then(response => this.setState({ coordinates: response.data }));
+    
+    this.setState({displayChart: true})
+ 
   };
   
   /** Different arrays for different dropdowns */
   const categorical = [
-    "Choose type of graph",
+    
     "Bar  graph",
     "Pie chart"
   ];
-  const numerical = ["Choose type of graph","Box plot","Scatter plot","Line graph"];
+  const numerical = [ "Box plot","Scatter plot","Line graph"];
   
   
   /** Type variable to store different array for different dropdown */
@@ -140,32 +159,26 @@ handleChange(checked) {
   if (type) {
     options = type.map((el) => <option key={el}>{el}</option>);
   }
+  var label = ['Yeah, Nah'];
+  if(typeof this.state.coordinates.x_labels != 'undefined')
+  {
+    label = this.state.coordinates.x_labels
+  }
+  //console.log(label)
   const options_bar = {
     animationEnabled: true,
     exportEnabled: true,
     zoomEnabled: true,
     theme: "light1", // "light1", "dark1", "dark2"
     title:{
-      text: "Actual results vs predicted results"
+      text: "Data visualization:"+this.state.selected
     },
     toolTip:{   
 				
       shared: true,
-      contentFormatter: function(e){
-        
-        var content = " ";
-        const	categoryname = this.state.coordinates.x_labels
-         for (var i = 0; i < e.entries.length; i++) {
-          content += e.entries[i].dataPoint.x +" : " + "<strong>" + categoryname[e.entries[i].dataPoint.y] + "</strong>";
-          content += "<br/>";
-        }
-        return content;
-         
-          
-      }
     },
     axisY: {
-      title: "Attribute",
+      title: "Frequency",
       interlacedColor: "Azure",
       tickLength: 10,
       interval:5000
@@ -176,15 +189,13 @@ handleChange(checked) {
       tickLength: 10,
       interval:1,
       labelFormatter: function(e){
-
-        const	categories = ['Yes','No']
-         return categories[e.value];
+        const	categories = label
+        return categories[e.value];
       },
       },
       data: [
       { 
-        showInLegend: true,           
-        legendText: "Predicted disease",
+        toolTipContent: "<b>{x}</b>: {y}",       
         dataPoints: dataPoints 
       
       },
@@ -193,6 +204,32 @@ handleChange(checked) {
       ]
     
   }
+  const options_pie = {
+    exportEnabled: true,
+    animationEnabled: true,
+    title: {
+      text: "Data visualization:"+this.state.selected
+    },
+    data: [{
+      type: "pie",
+      startAngle: 75,
+      toolTipContent: "<b>{label}</b>: {y}%",
+      showInLegend: "true",
+      legendText: "{label}",
+      indexLabelFontSize: 16,
+      indexLabel: "{label} - {y}%",
+      dataPoints: dataPointsPie
+    }]
+  }
+  var chartType = options_bar;
+  if(this.state.type == 'Bar graph')
+  {
+    chartType = options_bar
+  }
+  else{
+    chartType = options_pie
+  }
+  
   return (
     
     <>
@@ -205,12 +242,9 @@ handleChange(checked) {
         marginLeft:"400px",
       }}
     >
-      <form>
-        <div>
-          {/** Bind changeSelectOptionHandler to onChange method of select.
-           * This method will trigger every time different
-           * option is selected.
-           */}
+      <form class="form">
+        <div class="attribute">
+          
           <select onChange={changeSelectOptionHandler}>
             <option>Choose Genomic attributes</option>
             <option>Inherited from father</option>
@@ -242,7 +276,7 @@ handleChange(checked) {
             <option>No. of previous abortion</option>
           </select>
         </div>
-        <div>
+        <div class="graphselect">
           <select onChange={getattributevalue}>
             {
               /** This is where we have used our options variable */
@@ -253,12 +287,19 @@ handleChange(checked) {
       </form>
 
     </div>
-     <CanvasJSChart options = {options_bar} 
+    <div className='chart'>
+    <Card style={{
+							width:"98%",
+							boxShadow: "0 5px 8px 0",
+						}}>
+     {this.state.displayChart && <CanvasJSChart options = {chartType} 
 				 onRef={ref => this.chart = ref} 
 				// onRef={this.setState({chartRef:this.chart})}
-			/> 
+			/> }
+      </Card>
+      </div>
       <label htmlFor="material-switch">
-      <Switch
+      {this.state.displayChart && <Switch
         checked={this.state.checked}
         onChange={this.handleChange}
         onColor="#86d3ff"
@@ -272,8 +313,19 @@ handleChange(checked) {
         width={48}
         className="react-switch"
         id="material-switch"
-      />
+      />}
     </label>
+    <div className='displayText'>
+    <Card style={{
+         
+							boxShadow: "0 5px 8px 0",
+              backgroundColor:'lightcyan',
+						}}>
+    
+    {display}
+    
+    </Card>
+    </div>
     </>
   );
           }

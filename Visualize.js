@@ -4,6 +4,8 @@ import axios from 'axios';
 import { variables } from './Variables';
 import Switch from 'react-switch';
 import './Visualize.css';
+import datavisualization from './datavisualization.jpg';
+import Card from '@material-ui/core/Card';
 
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
@@ -19,7 +21,8 @@ class Visualize extends Component {
       displayChart: false,
       checked: false,
       selected:'',
-      coordinates:[]
+      coordinates:[],
+      differential:''
     }
 }
 setDatapoints(){
@@ -61,12 +64,15 @@ handleChange(checked) {
 }
 
 handleDisplay=()=>{
-  var text="";
+  var text=[];
+  var arrow="";
+  var diff = 0
   if(typeof this.state.coordinates.x != 'undefined')
   {
     for (let i = 0; i < this.state.coordinates.x.length; i++) {
-      text = text.concat(this.state.coordinates.x_labels[i],":",this.state.coordinates.y[i],"\n")
+      text.push(<div className='display'>{this.state.coordinates.x_labels[i]+":" + this.state.coordinates.y[i]}</div>)
     }
+    // text = this.state.coordinates.map((xlabel) => <div>{xlabel}</div>)
   }
   console.log(text)
   console.log(typeof text)
@@ -74,18 +80,12 @@ handleDisplay=()=>{
 
 }
   render(){
+  const myStyle = { backgroundImage: `url(${datavisualization})`, border:"0", height:"25vh", width:"100%", top:0};
   //const [selected, setSelected] = React.useState("");
   const dataPoints=this.setDatapoints();
   const dataPointsPie = this.setDatapointsPie();
   const display = this.handleDisplay();
 
-  // var display
-  // if(typeof this.state.displayTxt != 'undefined')
-  // {
-  //   display = this.state.displayTxt
-  // }
-  //console.log(dataPoints)
-  //console.log(dataPointsPie)
    const getattributevalue=(event)=>{
 
     
@@ -213,14 +213,15 @@ handleDisplay=()=>{
     data: [{
       type: "pie",
       startAngle: 75,
-      toolTipContent: "<b>{label}</b>: {y}%",
+      toolTipContent: "<b>{label}</b>: {y}",
       showInLegend: "true",
       legendText: "{label}",
       indexLabelFontSize: 16,
-      indexLabel: "{label} - {y}%",
+      indexLabel: "{label} - {y}",
       dataPoints: dataPointsPie
     }]
   }
+  
   var chartType = options_bar;
   if(this.state.type == 'Bar graph')
   {
@@ -234,16 +235,16 @@ handleDisplay=()=>{
     
     <>
     
-    
+    <div style = {myStyle}>
     <div
       style={{
         padding: "16px",
-        margin: "16px",
+        // margin: "16px",
         marginLeft:"400px",
       }}
     >
-      <form>
-        <div>
+      <form class="form">
+        <div class="attribute">
           {/** Bind changeSelectOptionHandler to onChange method of select.
            * This method will trigger every time different
            * option is selected.
@@ -279,7 +280,7 @@ handleDisplay=()=>{
             <option>No. of previous abortion</option>
           </select>
         </div>
-        <div>
+        <div class="graphselect">
           <select onChange={getattributevalue}>
             {
               /** This is where we have used our options variable */
@@ -288,13 +289,19 @@ handleDisplay=()=>{
           </select>
         </div>
       </form>
-
+    
+    </div>
     </div>
     <div className='chart'>
+    <Card style={{
+							width:"98%",
+							boxShadow: "0 5px 8px 0",
+						}}>
      {this.state.displayChart && <CanvasJSChart options = {chartType} 
 				 onRef={ref => this.chart = ref} 
 				// onRef={this.setState({chartRef:this.chart})}
 			/> }
+      </Card>
       </div>
       <label htmlFor="material-switch">
       {this.state.displayChart && <Switch
@@ -314,7 +321,15 @@ handleDisplay=()=>{
       />}
     </label>
     <div className='displayText'>
+    <Card style={{
+         
+         boxShadow: "0 5px 8px 0",
+         backgroundColor:'lightcyan',
+       }}>
+
     {display}
+
+    </Card>
     </div>
     </>
   );

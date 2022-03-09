@@ -1,14 +1,39 @@
 .home{
-    display: flex;
-    flex-direction: row;
+   
     position: absolute;
     left:700px;
 }
 
+.video{
+    margin-left: 700px;
+    margin-top: 50px;
+}
+
+.Carousel-item{
+    margin-left: 700px;
+}
 .chatbot{
     display: flex;
     flex-direction: row;
-    position: absolute;
-    left:900px;
+    position: fixed;
+    left:1600px;
+    top:380px;
+}
+
+.chat{
+    position: fixed;
+    left:1820px;
+    top:900px;
+    border-color: white;
+    border: none;
+    outline: none;
+    background: none;
+
+}
+
+.chatBtn{
+    border:none;
+    outline: none;
+    background: none;
 }
 

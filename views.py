@@ -1,15 +1,65 @@
+import json
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse, HttpResponse
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn import preprocessing
+from sklearn import datasets, preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from diffprivlib.models import GaussianNB as GNB
+from diffprivlib import tools as tools
 # Create your views here.
+def histWithdp(dataset,attribute):
+    print("In with DP")
+    #dataset = preprocess()
+    dp_hist, dp_bins = tools.histogram(dataset[attribute],bins=len(dataset[attribute].unique()))
+    print("coordinates",dp_hist)
+    return dp_hist.tolist()
 
+def histWithoutdp(dataset,attribute):
+   #dataset[attribute].unique()
+    # dataset = preprocess()
+    hist,bins = np.histogram(dataset[attribute],bins=len(dataset[attribute].unique()))
+    print("hist::",hist)
+    #print(dataset['Maternal gene'])
+    return hist.tolist()
+
+@csrf_exempt 
+def visualizeattributes(request):
+    
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        print("type of data",type(json.loads(request.body)))
+        attribute = data['selected']
+        dp = data['dpcheck']
+        request.session['attribute'] = attribute
+        print(request.session.get('attribute'))
+        dataset=preprocess()
+        category_names=dataset[attribute].unique()
+        dataset=labelencode(dataset)
+        categories=dataset[attribute].unique()        
+        attributelist=dataset[attribute].tolist()
+        print(dp)
+        if(dp==True):
+            print(dp)
+            res = histWithdp(dataset,attribute)
+            print("res: ",res)
+            x_axis = list(range(0,len(res)))
+            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist()})
+        else:
+            res = histWithoutdp(dataset,attribute)
+            print("res: ",res)
+            x_axis = list(range(0,len(res)))
+            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist()})
+        # results=[]
+        # for i in categories:
+        #     results.append(attributelist.count(i))
+        # print("y: ",type(results),"x : ",type(categories))
+        #return JsonResponse({'x':categories.tolist(),'y':results,'x_labels':category_names.tolist()})
+        #return HttpResponse('Successful')
+        
 @csrf_exempt 
 def dashboardApi(request):
     
@@ -17,19 +67,21 @@ def dashboardApi(request):
         data = request.POST
         epsilon = list(data.keys())[0]
         request.session['epsilon'] = epsilon
-        print(request.session.get('epsilon'))
-        print('posssssttt methoddd', epsilon)
-        return HttpResponse('Successful')
+        y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions(epsilon)
+        x_axis = list(range(0,100))
+        #print(request.session.get('epsilon'))
+        #print('posssssttt methoddd', epsilon)
+        return JsonResponse({'x':x_axis,'y':y,'y_dp':y_dp,'acc_dp':ac_score_dp,'acc':ac_score,'res': res, 'res_dp': res_dp,'actual': actual,'rem':100-(ac_score),'rem_dp':100-(ac_score_dp)})
     if request.method == 'GET':
         eps = request.session.get('epsilon')
 
         print("gettttt methhoddd",eps)
-        y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions()
+        y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions(1)
         x_axis = list(range(0,100))
         
-        JsonResponse({'x':x_axis,'y':y,'y_dp':y_dp,'acc_dp':ac_score_dp,'acc':ac_score,'res': res, 'res_dp': res_dp,'actual': actual,'rem':100-(ac_score),'rem_dp':100-(ac_score_dp)})
-def plot_predictions(eps=1):
-    print("in defff",eps)
+        return JsonResponse({'x':x_axis,'y':y,'y_dp':y_dp,'acc_dp':ac_score_dp,'acc':ac_score,'res': res, 'res_dp': res_dp,'actual': actual,'rem':100-(ac_score),'rem_dp':100-(ac_score_dp)})
+
+def preprocess():
     GENETICS_DATASET = pd.read_csv(r"D:\anaya\IBM_Group8_DifferentialPrivacy\train.csv")
     dataset = GENETICS_DATASET.copy()
     # Drop unwanted fields
@@ -78,8 +130,9 @@ def plot_predictions(eps=1):
     dataset["H/O substance abuse"].fillna(dataset["H/O substance abuse"].mode()[0], inplace=True)
 
     dataset.dropna(inplace=True,axis=0)
+    return dataset
 
-
+def labelencode(dataset):
     label_encoder = preprocessing.LabelEncoder()
     dataset["Genes in mother's side"]= label_encoder.fit_transform(dataset["Genes in mother's side"])
     dataset["Inherited from father"]= label_encoder.fit_transform(dataset["Inherited from father"])
@@ -101,7 +154,13 @@ def plot_predictions(eps=1):
     dataset["Genetic Disorder"]= label_encoder.fit_transform(dataset["Genetic Disorder"])
     dataset["Disorder Subclass"]= label_encoder.fit_transform(dataset["Disorder Subclass"])
     dataset["Gender"]= label_encoder.fit_transform(dataset["Gender"])
-    
+
+    return dataset
+
+def plot_predictions(eps):
+    print("epsiiiiiillllon",eps)
+    dataset=preprocess()
+    dataset=labelencode(dataset)
     x=dataset.iloc[:,:-2]
     y = dataset[['Genetic Disorder']]
     #x["sum of Mother's and fathers age avg"]=(x["Mother's age"]+x["Father's age"]) / 2
@@ -118,10 +177,12 @@ def plot_predictions(eps=1):
 
    
     # differential privacy
+    print("int of epsiln",int(eps))
     clf = GNB(epsilon = int(eps))
     clf.fit(x_train, y_train)
     y_pred_dp=clf.predict(x_test)
     acc_score_dp= clf.score(x_test, y_test)
+    print("acc",acc_score_dp)
     y_pred_list = y_pred.tolist()[:100]
     y_pred_dp_list = y_pred_dp.tolist()[:100]
     results = [y_pred_list.count(0), y_pred_list.count(1), y_pred_list.count(2)]
@@ -134,5 +195,4 @@ def plot_predictions(eps=1):
     #plt.show()
     return y_pred_list , y_pred_dp_list, results,results_dp, actual,acc_score*100,acc_score_dp*100
 
-
-
+    

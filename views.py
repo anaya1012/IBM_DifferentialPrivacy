@@ -12,18 +12,11 @@ from diffprivlib.models import GaussianNB as GNB
 from diffprivlib import tools as tools
 # Create your views here.
 def histWithdp(dataset,attribute):
-    print("In with DP")
-    #dataset = preprocess()
     dp_hist, dp_bins = tools.histogram(dataset[attribute],bins=len(dataset[attribute].unique()))
-    print("coordinates",dp_hist)
     return dp_hist.tolist()
 
 def histWithoutdp(dataset,attribute):
-   #dataset[attribute].unique()
-    # dataset = preprocess()
     hist,bins = np.histogram(dataset[attribute],bins=len(dataset[attribute].unique()))
-    print("hist::",hist)
-    #print(dataset['Maternal gene'])
     return hist.tolist()
 
 @csrf_exempt 
@@ -43,22 +36,17 @@ def visualizeattributes(request):
         attributelist=dataset[attribute].tolist()
         print(dp)
         if(dp==True):
-            print(dp)
             res = histWithdp(dataset,attribute)
-            print("res: ",res)
             x_axis = list(range(0,len(res)))
-            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist()})
+            x_num = list(range(0,100))
+            y_num = dataset[attribute].tolist()[:100]
+            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist(),'x_num':x_num,'y_num':y_num})
         else:
             res = histWithoutdp(dataset,attribute)
-            print("res: ",res)
             x_axis = list(range(0,len(res)))
-            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist()})
-        # results=[]
-        # for i in categories:
-        #     results.append(attributelist.count(i))
-        # print("y: ",type(results),"x : ",type(categories))
-        #return JsonResponse({'x':categories.tolist(),'y':results,'x_labels':category_names.tolist()})
-        #return HttpResponse('Successful')
+            x_num = list(range(0,100))
+            y_num = dataset[attribute].tolist()[:100]
+            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist(),'x_num':x_num,'y_num':y_num})
         
 @csrf_exempt 
 def dashboardApi(request):
@@ -69,8 +57,6 @@ def dashboardApi(request):
         request.session['epsilon'] = epsilon
         y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions(epsilon)
         x_axis = list(range(0,100))
-        #print(request.session.get('epsilon'))
-        #print('posssssttt methoddd', epsilon)
         return JsonResponse({'x':x_axis,'y':y,'y_dp':y_dp,'acc_dp':ac_score_dp,'acc':ac_score,'res': res, 'res_dp': res_dp,'actual': actual,'rem':100-(ac_score),'rem_dp':100-(ac_score_dp)})
     if request.method == 'GET':
         eps = request.session.get('epsilon')

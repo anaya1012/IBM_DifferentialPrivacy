@@ -6,6 +6,7 @@ import Switch from 'react-switch';
 import './Visualize.css';
 import datavisualization from './datavisualization.jpg';
 import Card from '@material-ui/core/Card';
+import Chart from 'react-apexcharts'
 
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
@@ -21,9 +22,44 @@ class Visualize extends Component {
       displayChart: false,
       checked: false,
       selected:'',
+      isCategorical:true,
+      isBox:false,
       coordinates:[],
-      differential:''
+      differential:'',
+      series: [
+        {
+          type: 'boxPlot',
+          data: [
+            {
+              x: 'Jan 2015',
+              y: [4098, 7000, 7919, 9000 , 10207]
+            }        
+          ]
+        }
+      ],
+      options: {
+        chart: {
+          type: 'boxPlot',
+          height: 350,
+        },
+        title: {
+          text: 'Basic BoxPlot Chart',
+          align: 'left'
+        },
+        plotOptions: {
+          bar: {
+            horizontal:true
+          },
+          boxPlot: {
+            colors: {
+              upper: '#BD4A4A',
+              lower: '#4C7AC2'
+            }
+          }
+        }
+      }
     }
+    
 }
 setDatapoints(){
 
@@ -41,10 +77,40 @@ setDatapoints(){
     //console.log(result)
   return result;
 }
+setNumericalData(){
+  const result=[];
+  //console.log(this.state.coordinates.x_num)
+  
+  if(typeof this.state.coordinates.x_num != 'undefined')
+    {
+      //console.log(this.state.coordinates)
+      for (let i = 0; i < this.state.coordinates.x_num.length; i++) {
+        //console.log(this.state.coordinates.x.length)
+          result.push({x:this.state.coordinates.x_num[i],y:(this.state.coordinates.y_num[i])})
+        }
+    }
+    //console.log(result)
+  return result;
+}
+setDataBoxplot(){
+  const result=[];
+  //console.log(this.state.coordinates)
+  
+  if(typeof this.state.coordinates.y_num != 'undefined')
+    {
+      //console.log(this.state.coordinates)
+      for (let i = 0; i < 10; i++) {
+        //console.log(this.state.coordinates.x.length)
+          result.push(this.state.coordinates.y_num[i])
+        }
+    }
+    //console.log(result)
+    return result;
+}
 setDatapointsPie(){
 
   const result=[];
-  console.log(this.state.coordinates)
+  //console.log(this.state.coordinates)
   
   if(typeof this.state.coordinates.x != 'undefined')
     {
@@ -74,21 +140,29 @@ handleDisplay=()=>{
     }
     // text = this.state.coordinates.map((xlabel) => <div>{xlabel}</div>)
   }
-  console.log(text)
-  console.log(typeof text)
+  //console.log(text)
+ //console.log(typeof text)
   return text
 
 }
   render(){
-  const myStyle = { backgroundImage: `url(${datavisualization})`, border:"0", height:"25vh", width:"100%", top:0};
+  const myStyle = { backgroundImage: `url(${datavisualization})`, border:"0", height:"20vh", width:"100%", top:0};
   //const [selected, setSelected] = React.useState("");
   const dataPoints=this.setDatapoints();
   const dataPointsPie = this.setDatapointsPie();
+  const numericData = this.setNumericalData();
+  const y_boxplot = this.setDataBoxplot();
   const display = this.handleDisplay();
-
+  //console.log(y_boxplot)
    const getattributevalue=(event)=>{
 
-    
+    if(event.target.value == 'Box plot')
+    {
+      this.setState({isBox:true})
+    }
+    else{
+      this.setState({isBox:false})
+    }
     this.setState({
       type: event.target.value
   });
@@ -98,6 +172,22 @@ handleDisplay=()=>{
     this.setState({
       selected: event.target.value
   });
+  if(event.target.value=== "Patient Age"||
+  event.target.value=== "Blood cell count (mcL)"||
+  event.target.value==="White Blood cell count (thousand per microliter)"||
+  event.target.value==="Mother's age"||
+  event.target.value==="No. of previous abortion)")  {
+    if(this.state.type === 'Bar graph')
+    this.setState({ type: "Box plot"});
+    this.setState({isBox: true})
+  }
+  else{
+    if(this.state.type === 'Box plot')
+    {
+      this.setState({ type: "Bar graph"});
+      this.setState({isBox: false})
+    }
+  }
     axios.post(variables.API_URL+'visualize', { selected: event.target.value,dpcheck: this.state.checked })
     .then(response => this.setState({ coordinates: response.data }));
     
@@ -111,7 +201,7 @@ handleDisplay=()=>{
     "Bar  graph",
     "Pie chart"
   ];
-  const numerical = [ "Box plot","Scatter plot","Line graph"];
+  const numerical = [ "Box plot","Scatter plot","Histogram"];
   
   
   /** Type variable to store different array for different dropdown */
@@ -146,7 +236,7 @@ handleDisplay=()=>{
   ) {
     type = categorical;
   } else if(this.state.selected=== "Patient Age"||
-  this.state.selected=== "Blood Cell count"||
+  this.state.selected=== "Blood cell count (mcL)"||
   this.state.selected==="White Blood cell count (thousand per microliter)"||
   this.state.selected==="Mother's age"||
   this.state.selected==="No. of previous abortion)")  {
@@ -221,14 +311,78 @@ handleDisplay=()=>{
       dataPoints: dataPointsPie
     }]
   }
+
+  const options_scatter = {
+    theme: "light1",
+    animationEnabled: true,
+    exportEnabled: true,
+    zoomEnabled: true,
+    title:{
+      text: "Data visualization:"+this.state.selected
+    },
+    axisX: {
+      title:"Data points",
+      // crosshair: {
+      //   enabled: true,
+      //   snapToDataPoint: true
+      // }
+    },
+    axisY:{
+      title: this.state.selected,
+      // crosshair: {
+      //   enabled: true,
+      //   snapToDataPoint: true
+      // }
+    },
+    data: [{
+      type: "scatter",
+      markerSize: 15,
+      toolTipContent: "Data Point: {x} Sales: {y}",
+      dataPoints: numericData
+    }]
+  }
   
+  const options_box = {
+    theme: "light1",
+    animationEnabled: true,
+    exportEnabled: true,
+    zoomEnabled: true,
+    title:{
+      text: this.state.selected
+    },
+    axisY: {
+      title: this.state.selected
+    },
+    data: [{
+      type: "boxAndWhisker",
+      dataPoints: [
+        { //label: this.state.selected,  y: [9.857562482195815, 7.472701665115447, 7.919320981493317, 4.098210272243849, 10.27223038958957, 6.825974323855865, 9.836351500269854, 6.669552178444405, 6.397701725889903, 5.957320885489781] }]
+          label: "Bread",  y: [4098, 7000, 7919, 9000 , 10207] }]
+    }]
+  }
+
+  const box_apex = {
+    
+  }
+  
+
   var chartType = options_bar;
+  //console.log(this.state.type)
   if(this.state.type == 'Bar graph')
   {
     chartType = options_bar
   }
-  else{
+  else if(this.state.type == 'Pie chart'){
     chartType = options_pie
+  }
+  else if(this.state.type == 'Scatter plot'){
+    chartType = options_scatter
+  }
+  else if(this.state.type == 'Box plot'){
+    chartType = options_box
+  }
+  else{
+    chartType = options_bar
   }
   
   return (
@@ -274,7 +428,7 @@ handleDisplay=()=>{
             <option>Genetic Disorder</option>
             <option>Disorder Subclass</option>
             <option>Patient Age</option>            
-            <option>Blood Cell count</option>
+            <option>Blood cell count (mcL)</option>
             <option>White Blood cell count (thousand per microliter)</option>
             <option>Mother's age</option>
             <option>No. of previous abortion</option>
@@ -303,6 +457,7 @@ handleDisplay=()=>{
 			/> }
       </Card>
       </div>
+      <div>
       <label htmlFor="material-switch">
       {this.state.displayChart && <Switch
         checked={this.state.checked}
@@ -320,6 +475,9 @@ handleDisplay=()=>{
         id="material-switch"
       />}
     </label>
+    {!this.state.checked && <label>Without Differential Privacy</label>}
+    {this.state.checked && <label>Differential Privacy</label>}
+      </div>
     <div className='displayText'>
     <Card style={{
          
@@ -327,10 +485,19 @@ handleDisplay=()=>{
          backgroundColor:'lightcyan',
        }}>
 
-    {display}
+    {/* {display} */}
 
     </Card>
+    
     </div>
+    {this.state.isBox && <div className='boxPlot'>
+    <Card style={{
+							width:"98%",
+							boxShadow: "0 5px 8px 0",
+						}}>
+    <Chart options={this.state.options} series={this.state.series} type="boxPlot" height={350} />
+    </Card>
+    </div>}
     </>
   );
           }

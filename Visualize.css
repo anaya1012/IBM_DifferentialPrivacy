@@ -8,6 +8,13 @@
     height: 190% 
 }
 
+.boxPlot{
+    margin-left: 300px; 
+    height: 1000px;
+    width: 1600px;
+    position: fixed;
+    top:320px;
+}
 .displayText{
     font-size: larger;
     margin-left: 900px;
@@ -16,13 +23,16 @@
 }
 .form{
     display: flex;
+    top:500px;
 }
 .attribute{
     flex:1;
-    font-size:larger;
+    font-size:x-large;
+    
 }
 .graphselect{
     flex:1;
-    font-size: larger;
+    font-size: x-large;
+    
 }
 

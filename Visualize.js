@@ -26,17 +26,7 @@ class Visualize extends Component {
       isBox:false,
       coordinates:[],
       differential:'',
-      series: [
-        {
-          type: 'boxPlot',
-          data: [
-            {
-              x: 'Jan 2015',
-              y: [4098, 7000, 7919, 9000 , 10207]
-            }        
-          ]
-        }
-      ],
+      
       options: {
         chart: {
           type: 'boxPlot',
@@ -99,13 +89,13 @@ setDataBoxplot(){
   if(typeof this.state.coordinates.y_num != 'undefined')
     {
       //console.log(this.state.coordinates)
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 100; i++) {
         //console.log(this.state.coordinates.x.length)
           result.push(this.state.coordinates.y_num[i])
         }
     }
-    //console.log(result)
-    return result;
+    console.log(result)
+    return result.sort();
 }
 setDatapointsPie(){
 
@@ -172,11 +162,13 @@ handleDisplay=()=>{
     this.setState({
       selected: event.target.value
   });
-  if(event.target.value=== "Patient Age"||
-  event.target.value=== "Blood cell count (mcL)"||
-  event.target.value==="White Blood cell count (thousand per microliter)"||
-  event.target.value==="Mother's age"||
-  event.target.value==="No. of previous abortion)")  {
+  let mapNumeric = new Set(["Patient Age","Blood cell count (mcL)","White Blood cell count (thousand per microliter)","Mother's age"])
+  // if(event.target.value=== "Patient Age"||
+  // event.target.value=== "Blood cell count (mcL)"||
+  // event.target.value==="White Blood cell count (thousand per microliter)"||
+  // event.target.value==="Mother's age"||
+  // event.target.value==="No. of previous abortion)")  
+  if(mapNumeric.has(event.target.value)){
     if(this.state.type === 'Bar graph')
     this.setState({ type: "Box plot"});
     this.setState({isBox: true})
@@ -197,11 +189,11 @@ handleDisplay=()=>{
   
   /** Different arrays for different dropdowns */
   const categorical = [
-    
+    "Choose type of graph",
     "Bar  graph",
     "Pie chart"
   ];
-  const numerical = [ "Box plot","Scatter plot","Histogram"];
+  const numerical = [ "Choose type of graph","Box plot","Scatter plot","Histogram"];
   
   
   /** Type variable to store different array for different dropdown */
@@ -361,9 +353,17 @@ handleDisplay=()=>{
     }]
   }
 
-  const box_apex = {
-    
-  }
+  const series=[
+    {
+      type: 'boxPlot',
+      data: [
+        {
+          x: this.state.selected,
+          y: y_boxplot
+        }        
+      ]
+    }
+  ]
   
 
   var chartType = options_bar;
@@ -490,14 +490,14 @@ handleDisplay=()=>{
     </Card>
     
     </div>
-    {this.state.isBox && <div className='boxPlot'>
+    {/* {this.state.isBox && <div className='boxPlot'>
     <Card style={{
 							width:"98%",
 							boxShadow: "0 5px 8px 0",
 						}}>
-    <Chart options={this.state.options} series={this.state.series} type="boxPlot" height={350} />
+    <Chart options={this.state.options} series={series} type="boxPlot" height={350} />
     </Card>
-    </div>}
+    </div>} */}
     </>
   );
           }

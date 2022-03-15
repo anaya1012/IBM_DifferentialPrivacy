@@ -4,25 +4,51 @@ import axios from 'axios';
 import { variables } from './Variables';
 import Switch from 'react-switch';
 import './Visualize.css';
-import Card from '@material-ui/core/Card';
 import datavisualization from './datavisualization.jpg';
+import Card from '@material-ui/core/Card';
+import Chart from 'react-apexcharts'
 
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
-class Visualize extends Component {
+class VisualizeNumerical extends Component {
 
   constructor(props){
     super(props);
     
     this.handleChange = this.handleChange.bind(this);
     this.state={
-      type: 'Bar graph',
+      type: 'Scatter plot',
       displayTxt: "",
       displayChart: false,
       checked: false,
       selected:'',
-      coordinates:[]
+     
+      coordinates:[],
+      differential:'',
+      
+      options: {
+        chart: {
+          type: 'boxPlot',
+          height: 350,
+        },
+        title: {
+          text: 'Basic BoxPlot Chart',
+          align: 'left'
+        },
+        plotOptions: {
+          bar: {
+            horizontal:true
+          },
+          boxPlot: {
+            colors: {
+              upper: '#BD4A4A',
+              lower: '#4C7AC2'
+            }
+          }
+        }
+      }
     }
+    
 }
 setDatapoints(){
 
@@ -40,22 +66,37 @@ setDatapoints(){
     //console.log(result)
   return result;
 }
-setDatapointsPie(){
-
+setNumericalData(){
   const result=[];
-  console.log(this.state.coordinates)
+  //console.log(this.state.coordinates.x_num)
   
-  if(typeof this.state.coordinates.x != 'undefined')
+  if(typeof this.state.coordinates.x_num != 'undefined')
     {
       //console.log(this.state.coordinates)
-      for (let i = 0; i < this.state.coordinates.x.length; i++) {
+      for (let i = 0; i < this.state.coordinates.x_num.length; i++) {
         //console.log(this.state.coordinates.x.length)
-          result.push({y:this.state.coordinates.y[i],label:(this.state.coordinates.x_labels[i])})
+          result.push({x:this.state.coordinates.x_num[i],y:(this.state.coordinates.y_num[i])})
         }
     }
     //console.log(result)
   return result;
 }
+setDataBoxplot(){
+  const result=[];
+  //console.log(this.state.coordinates)
+  
+  if(typeof this.state.coordinates.y_num != 'undefined')
+    {
+      //console.log(this.state.coordinates)
+      for (let i = 0; i < 100; i++) {
+        //console.log(this.state.coordinates.x.length)
+          result.push(this.state.coordinates.y_num[i])
+        }
+    }
+    console.log(result)
+    return result.sort();
+}
+
 handleChange(checked) {
   this.setState({ checked });
   //console.log(checked)
@@ -64,8 +105,7 @@ handleChange(checked) {
 
 handleDisplay=()=>{
   var text=[];
-  var arrow="";
-  var diff = 0
+  
   if(typeof this.state.coordinates.x != 'undefined')
   {
     for (let i = 0; i < this.state.coordinates.x.length; i++) {
@@ -73,25 +113,19 @@ handleDisplay=()=>{
     }
     // text = this.state.coordinates.map((xlabel) => <div>{xlabel}</div>)
   }
-  //console.log(text)
-  //console.log(typeof text)
+  
   return text
 
 }
   render(){
-    const myStyle = { backgroundImage: `url(${datavisualization})`, border:"0", height:"25vh", width:"100%", top:0};
+  const myStyle = { backgroundImage: `url(${datavisualization})`, border:"0", height:"20vh", width:"100%", top:0};
   //const [selected, setSelected] = React.useState("");
   const dataPoints=this.setDatapoints();
-  const dataPointsPie = this.setDatapointsPie();
+  
+  const numericData = this.setNumericalData();
+  const y_boxplot = this.setDataBoxplot();
   const display = this.handleDisplay();
-
-  // var display
-  // if(typeof this.state.displayTxt != 'undefined')
-  // {
-  //   display = this.state.displayTxt
-  // }
-  //console.log(dataPoints)
-  //console.log(dataPointsPie)
+  //console.log(y_boxplot)
    const getattributevalue=(event)=>{
 
     
@@ -104,6 +138,8 @@ handleDisplay=()=>{
     this.setState({
       selected: event.target.value
   });
+  
+  
     axios.post(variables.API_URL+'visualize', { selected: event.target.value,dpcheck: this.state.checked })
     .then(response => this.setState({ coordinates: response.data }));
     
@@ -112,103 +148,107 @@ handleDisplay=()=>{
   };
   
   /** Different arrays for different dropdowns */
-  const categorical = [
-    
-    "Bar  graph",
-    "Pie chart"
-  ];
   
+  const numerical = [ "Scatter plot","Box plot","Histogram"];
   
   
   /** Type variable to store different array for different dropdown */
-  let type = null;
+  
   
   /** This will be used to create set of options that user will see */
   let options = null;
   
   
-  type=categorical;
+   
+  
+  
   /** If "Type" is null or undefined then options will be null,
    * otherwise it will create a options iterable based on our array
    */
-  if (type) {
-    options = type.map((el) => <option key={el}>{el}</option>);
-  }
-  var label;
+  
+    options = numerical.map((el) => <option key={el}>{el}</option>);
+  
+ var label;
   if(typeof this.state.coordinates.x_labels != 'undefined')
   {
     label = this.state.coordinates.x_labels
   }
   //console.log(label)
-  const options_bar = {
+  
+  const options_scatter = {
+    theme: "light1",
     animationEnabled: true,
     exportEnabled: true,
     zoomEnabled: true,
-    theme: "light1", // "light1", "dark1", "dark2"
     title:{
       text: "Data visualization:"+this.state.selected
     },
-    toolTip:{   
-				
-      shared: true,
+    axisX: {
+      title:"Data points",
+      // crosshair: {
+      //   enabled: true,
+      //   snapToDataPoint: true
+      // }
     },
-    axisY: {
-      title: "Frequency",
-      interlacedColor: "Azure",
-      tickLength: 10,
-      interval:5000
-      },
-    
-      axisX: {
-        title: "Categories",
-      tickLength: 10,
-      interval:1,
-      labelFormatter: function(e){
-        const	categories = label
-        return categories[e.value];
-      },
-      },
-      data: [
-      { 
-        toolTipContent: "<b>{x}</b>: {y}",       
-        dataPoints: dataPoints 
-      
-      },
-      
-    
-      ]
-    
-  }
-  const options_pie = {
-    exportEnabled: true,
-    animationEnabled: true,
-    title: {
-      text: "Data visualization:"+this.state.selected
+    axisY:{
+      title: this.state.selected,
+      // crosshair: {
+      //   enabled: true,
+      //   snapToDataPoint: true
+      // }
     },
     data: [{
-      type: "pie",
-      startAngle: 75,
-      toolTipContent: "<b>{label}</b>: {y}%",
-      showInLegend: "true",
-      legendText: "{label}",
-      indexLabelFontSize: 16,
-      indexLabel: "{label} - {y}%",
-      dataPoints: dataPointsPie
+      type: "scatter",
+      markerSize: 15,
+      toolTipContent: "Data Point: {x} Sales: {y}",
+      dataPoints: numericData
     }]
   }
-  var chartType = options_bar;
   
-  //console.log(this.state.type)
-  if(this.state.type === 'Bar graph')
-  {
-    chartType = options_bar
+  const options_box = {
+    theme: "light1",
+    animationEnabled: true,
+    exportEnabled: true,
+    zoomEnabled: true,
+    title:{
+      text: this.state.selected
+    },
+    axisY: {
+      title: this.state.selected
+    },
+    data: [{
+      type: "boxAndWhisker",
+      dataPoints: [
+        { //label: this.state.selected,  y: [9.857562482195815, 7.472701665115447, 7.919320981493317, 4.098210272243849, 10.27223038958957, 6.825974323855865, 9.836351500269854, 6.669552178444405, 6.397701725889903, 5.957320885489781] }]
+          label: "Bread",  y: [4098, 7000, 7919, 9000 , 10207] }]
+    }]
   }
-  else if(this.state.type === 'Pie chart'){
-    chartType = options_pie
+
+  const series=[
+    {
+      type: 'boxPlot',
+      data: [
+        {
+          x: this.state.selected,
+          y: y_boxplot
+        }        
+      ]
+    }
+  ]
+  
+
+  var chartType = options_scatter;
+  
+  if(this.state.type == 'Scatter plot'){
+    chartType = options_scatter
+  }
+  else if(this.state.type == 'Box plot'){
+    chartType = options_box
   }
   else{
-    chartType = options_bar
+    chartType = options_scatter
   }
+  
   return (
     
     <>
@@ -217,39 +257,23 @@ handleDisplay=()=>{
     <div
       style={{
         padding: "16px",
-        margin: "16px",
+        // margin: "16px",
         marginLeft:"400px",
-        
       }}
     >
       <form class="form">
         <div class="attribute">
-          
+          {/** Bind changeSelectOptionHandler to onChange method of select.
+           * This method will trigger every time different
+           * option is selected.
+           */}
           <select onChange={changeSelectOptionHandler}>
-            <option>Choose Genomic attributes</option>
-            <option>Inherited from father</option>
-            <option>Maternal gene</option>
-            <option>Paternal gene</option>
-            <option>Respiratory Rate (breaths/min)</option>
-            <option>Heart Rate (rates/min</option>
-            <option>Gender</option>
-            <option>Birth asphyxia</option>
-            <option>Autopsy shows birth defect (if applicable)</option>
-            <option>Folic acid details</option>
-            <option>H/O radiation exposure (x-ray)</option>
-            <option>H/O serious maternal illness</option>
-            <option>H/O substance abuse </option>
-            <option>Assisted conception IVF/ART </option>
-            <option>History of anomalies in previous pregnancies</option>
-            <option>Birth defects</option>
-            <option>Symptom 1</option>
-            <option>Symptom 2</option>
-            <option>Symptom 3</option>
-            <option>Symptom 4</option>
-            <option>Symptom 5</option>
-            <option>Genetic Disorder</option>
-            <option>Disorder Subclass</option>
-            
+            <option>Choose genomic attribute</option>
+            <option>Patient Age</option>            
+            <option>Blood cell count (mcL)</option>
+            <option>White Blood cell count (thousand per microliter)</option>
+            <option>Mother's age</option>
+            <option>No. of previous abortion</option>
           </select>
         </div>
         <div class="graphselect">
@@ -261,6 +285,7 @@ handleDisplay=()=>{
           </select>
         </div>
       </form>
+    
     </div>
     </div>
     <div className='chart'>
@@ -275,11 +300,8 @@ handleDisplay=()=>{
       </Card>
       </div>
       <div>
-        
-      
       <label htmlFor="material-switch">
-
-      {this.state.displayChart &&  <Switch
+      {this.state.displayChart && <Switch
         checked={this.state.checked}
         onChange={this.handleChange}
         onColor="#86d3ff"
@@ -300,18 +322,27 @@ handleDisplay=()=>{
       </div>
     <div className='displayText'>
     <Card style={{
-              textAlign:'center',
-							boxShadow: "0 5px 8px 0",
-              backgroundColor:'lightcyan',
-						}}>
-    
-    {display}
-    
+         
+         boxShadow: "0 5px 8px 0",
+         backgroundColor:'lightcyan',
+       }}>
+
+    {/* {display} */}
+
     </Card>
+    
     </div>
+    {/* {this.state.isBox && <div className='boxPlot'>
+    <Card style={{
+							width:"98%",
+							boxShadow: "0 5px 8px 0",
+						}}>
+    <Chart options={this.state.options} series={series} type="boxPlot" height={350} />
+    </Card>
+    </div>} */}
     </>
   );
           }
 };
   
-export default Visualize;
+export default VisualizeNumerical;

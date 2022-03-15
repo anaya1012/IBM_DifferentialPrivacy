@@ -8,7 +8,7 @@ const options = [
         id:1,
     },
     {text: "   Epsilon", handler: props.actionProvider.handleEpsilon, id: 2},
-    {text: "Neighbouring dataset", handler: () =>{}, id: 3}
+    {text: "Neighbouring dataset", handler: props.actionProvider.handleNeighbouring, id: 3}
 ];
 
 const buttonsMarkup = options.map((option) => (

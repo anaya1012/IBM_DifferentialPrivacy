@@ -32,7 +32,9 @@ function Home() {
 					</Typography>
 				</Toolbar>
 			</AppBar> */}
-        	<Grid container>
+			
+        	<Grid container style={{
+        backgroundColor: '#E6E6FA'}}>
 				<Grid item lg>
 					<div className='video'>
 						
@@ -122,6 +124,9 @@ Differential privacy is also used in applications of other
 			
 							
 						</Carousel>
+						
+						</div>
+						</Grid>
 
 						
 						<div className='chat'><button className='chatBtn' onClick={btnHandler}><img src={Botmodified} border="0" height="60" width="60" /></button></div>
@@ -147,22 +152,23 @@ Differential privacy is also used in applications of other
         </div>
     </div>
 
-	<div className="flip-card">
-       <div className="flip-card-inner">
-          <div className="flip-card-front">
+	<div className="flip-card2">
+       <div className="flip-card-inner2">
+          <div className="flip-card-front2">
 		  <img src= "https://i.stack.imgur.com/BxojF.png"
              alt="Avatar" />
           </div>
-          <div className="flip-card-back">
+          <div className="flip-card-back2">
            <h1>General sensitivity</h1>
            <p>Generally sensitivity refers to the impact a change in the underlying data set can have on the result of the query. Let xA, xB be any data set from all possible data set of X differing in at most one element.</p>
            
           </div>
         </div>
     </div>
-					</div>
-				</Grid>
+					
+				
 		</Grid>
+		
 	</>
     )
 }

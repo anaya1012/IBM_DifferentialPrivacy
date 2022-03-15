@@ -1,9 +1,10 @@
 // Config starter code
 import { createChatBotMessage } from "react-chatbot-kit";
 import Options from "./Options";
+import Botmodified from './Botmodified.png';
 
 const config = {
-  botName: "Elsa", 
+  botName: "Elsa",
   initialMessages: [createChatBotMessage(`Hello. What do you want to learn`, {
     widget: "options"
   })],

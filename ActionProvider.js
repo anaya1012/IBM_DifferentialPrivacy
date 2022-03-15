@@ -30,6 +30,22 @@ class ActionProvider {
      this.addMessageToState(message)
    }
 
+   handleNeighbouring = ()=>{
+    const message = this.createChatBotMessage("Two datasets are neighbouring if they differ in at the most one row corresponding to one individual's data.")
+    this.addMessageToState(message);
+   }
+
+   handleError = () =>{
+    const message = this.createChatBotMessage("Sorry I didn't quite understand that. Try using help for a list of commands.")
+    this.addMessageToState(message);
+   }
+   
+   handleHelp = () =>{
+    const message = this.createChatBotMessage("What do you want to learn?", {
+      widget: "options"
+    })
+    this.addMessageToState(message);
+   }
    addMessageToState = (message) =>{
     this.setState(prevState => ({
       ...prevState,

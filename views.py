@@ -10,20 +10,20 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from diffprivlib.models import GaussianNB as GNB
 from diffprivlib import tools as tools
+
+import warnings
+from sys import maxsize
+import diffprivlib as dp
+from diffprivlib.accountant import BudgetAccountant
+from diffprivlib.mechanisms import GeometricTruncated
+from diffprivlib.utils import PrivacyLeakWarning, warn_unused_args
 # Create your views here.
 def histWithdp(dataset,attribute):
-    print("In with DP")
-    #dataset = preprocess()
     dp_hist, dp_bins = tools.histogram(dataset[attribute],bins=len(dataset[attribute].unique()))
-    print("coordinates",dp_hist)
     return dp_hist.tolist()
 
 def histWithoutdp(dataset,attribute):
-   #dataset[attribute].unique()
-    # dataset = preprocess()
     hist,bins = np.histogram(dataset[attribute],bins=len(dataset[attribute].unique()))
-    print("hist::",hist)
-    #print(dataset['Maternal gene'])
     return hist.tolist()
 
 @csrf_exempt 
@@ -31,9 +31,11 @@ def visualizeattributes(request):
     
     if request.method == 'POST':
         data = json.loads(request.body)
-        print("type of data",type(json.loads(request.body)))
+        print("type of data",json.loads(request.body))
         attribute = data['selected']
-        dp = data['dpcheck']
+        dp_bool = data['dpcheck']
+        grph_type = data['grph_type']
+        print(grph_type)
         request.session['attribute'] = attribute
         print(request.session.get('attribute'))
         dataset=preprocess()
@@ -42,23 +44,28 @@ def visualizeattributes(request):
         categories=dataset[attribute].unique()        
         attributelist=dataset[attribute].tolist()
         print(dp)
-        if(dp==True):
-            print(dp)
-            res = histWithdp(dataset,attribute)
-            print("res: ",res)
+        if(dp_bool==True):
+            if grph_type == 'Scatter plot':
+                y_num = dataset[attribute].tolist()[:100]
+                print(y_num)
+                acc = dp.BudgetAccountant(epsilon=5.5, delta=0)
+                accountant = BudgetAccountant.load_default(acc)
+                res = scatter(y_num,epsilon=1,delta = 0,accountant = accountant)
+                print(res)
+            else:
+                res = histWithdp(dataset,attribute)
+                y_num = dataset[attribute].tolist()[:100]
+            
             x_axis = list(range(0,len(res)))
-            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist()})
+            x_num = list(range(0,100))
+            print('end of function visualizeattributes')
+            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist(),'x_num':x_num,'y_num':res})
         else:
             res = histWithoutdp(dataset,attribute)
-            print("res: ",res)
             x_axis = list(range(0,len(res)))
-            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist()})
-        # results=[]
-        # for i in categories:
-        #     results.append(attributelist.count(i))
-        # print("y: ",type(results),"x : ",type(categories))
-        #return JsonResponse({'x':categories.tolist(),'y':results,'x_labels':category_names.tolist()})
-        #return HttpResponse('Successful')
+            x_num = list(range(0,100))
+            y_num = dataset[attribute].tolist()[:100]
+            return JsonResponse({'x': x_axis,'y':res,'x_labels':category_names.tolist(),'x_num':x_num,'y_num':y_num})
         
 @csrf_exempt 
 def dashboardApi(request):
@@ -67,14 +74,14 @@ def dashboardApi(request):
         data = request.POST
         epsilon = list(data.keys())[0]
         request.session['epsilon'] = epsilon
-        #print(request.session.get('epsilon'))
-        #print('posssssttt methoddd', epsilon)
-        return HttpResponse('Successful')
+        y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions(epsilon)
+        x_axis = list(range(0,100))
+        return JsonResponse({'x':x_axis,'y':y,'y_dp':y_dp,'acc_dp':ac_score_dp,'acc':ac_score,'res': res, 'res_dp': res_dp,'actual': actual,'rem':100-(ac_score),'rem_dp':100-(ac_score_dp)})
     if request.method == 'GET':
         eps = request.session.get('epsilon')
 
-        #print("gettttt methhoddd",eps)
-        y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions()
+        print("gettttt methhoddd",eps)
+        y,y_dp,res,res_dp,actual,ac_score,ac_score_dp=plot_predictions(1)
         x_axis = list(range(0,100))
         
         return JsonResponse({'x':x_axis,'y':y,'y_dp':y_dp,'acc_dp':ac_score_dp,'acc':ac_score,'res': res, 'res_dp': res_dp,'actual': actual,'rem':100-(ac_score),'rem_dp':100-(ac_score_dp)})
@@ -155,8 +162,8 @@ def labelencode(dataset):
 
     return dataset
 
-def plot_predictions(eps=1):
-    
+def plot_predictions(eps):
+    print("epsiiiiiillllon",eps)
     dataset=preprocess()
     dataset=labelencode(dataset)
     x=dataset.iloc[:,:-2]
@@ -175,10 +182,12 @@ def plot_predictions(eps=1):
 
    
     # differential privacy
+    print("int of epsiln",int(eps))
     clf = GNB(epsilon = int(eps))
     clf.fit(x_train, y_train)
     y_pred_dp=clf.predict(x_test)
     acc_score_dp= clf.score(x_test, y_test)
+    print("acc",acc_score_dp)
     y_pred_list = y_pred.tolist()[:100]
     y_pred_dp_list = y_pred_dp.tolist()[:100]
     results = [y_pred_list.count(0), y_pred_list.count(1), y_pred_list.count(2)]
@@ -191,3 +200,29 @@ def plot_predictions(eps=1):
     #plt.show()
     return y_pred_list , y_pred_dp_list, results,results_dp, actual,acc_score*100,acc_score_dp*100
 
+def scatter(sample, epsilon=1.0, delta=0, accountant=None, **unused_args):
+    """
+    epsilon : float, default: 1.0
+        Privacy parameter :math:`\epsilon` to be applied.
+        
+    sample: y co-ordinates 
+    
+    accountant : BudgetAccountant, optional
+        Accountant to keep track of privacy budget.
+        
+    Returns:
+    
+    y-co-ordinates: array
+    """
+    warn_unused_args(unused_args)
+    accountant = BudgetAccountant.load_default(accountant)
+    accountant.check(epsilon, delta)
+    dp_mech = GeometricTruncated(epsilon=epsilon, sensitivity=1, lower=0, upper=maxsize)
+    dp_scatter = np.zeros_like(sample)
+
+    for i in np.arange(dp_scatter.shape[0]):
+        dp_scatter[i] = dp_mech.randomise(int(sample[i]))
+        
+    accountant.spend(epsilon, 0)
+    
+    return dp_scatter.tolist()

@@ -59,7 +59,7 @@ setDatapointsPie(){
 handleChange(checked) {
   this.setState({ checked });
   //console.log(checked)
-  axios.post(variables.API_URL+'visualize',  { selected: this.state.selected,dpcheck: checked }).then(response => this.setState({ coordinates: response.data })).then(this.chart.render());
+  axios.post(variables.API_URL+'visualize',  { selected: this.state.selected,dpcheck: checked, grph_type: this.state.type }).then(response => this.setState({ coordinates: response.data })).then(this.chart.render());
 }
 
 handleDisplay=()=>{
@@ -104,7 +104,7 @@ handleDisplay=()=>{
     this.setState({
       selected: event.target.value
   });
-    axios.post(variables.API_URL+'visualize', { selected: event.target.value,dpcheck: this.state.checked })
+    axios.post(variables.API_URL+'visualize', { selected: event.target.value,dpcheck: this.state.checked , grph_type: this.state.type})
     .then(response => this.setState({ coordinates: response.data }));
     
     this.setState({displayChart: true})
@@ -117,6 +117,8 @@ handleDisplay=()=>{
     "Bar  graph",
     "Pie chart"
   ];
+  
+ 
   
   
   

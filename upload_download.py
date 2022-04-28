@@ -1,5 +1,6 @@
-from importlib.metadata import metadata
+
 import json
+from pydoc import doc
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse, HttpResponse
@@ -35,9 +36,9 @@ def upload_file(request):
     data = [line for line in reader]
     #print("data:: ", dict(data))
     mycol.insert_many(data)
-    print(reqfile['description'])
-    print(reqfile)
-    mydb['metadata'].insert({'filename':collection_name,'description':reqfile['description']})
+    
+    print(reqfile['author'])
+    mydb['metadata'].insert({'filename':collection_name,'description':reqfile['description'],'author':reqfile['author']})
        # data = {k: v[0] if len(v) == 1 else v for k, v in data.lists()}
     return HttpResponse("Done")
 
@@ -50,15 +51,16 @@ def fetch_all(request):
     print("List:: ",metadata_list)
     
     return JsonResponse({'value':metadata_list})
+
 @csrf_exempt
-def download_file():
+def download_file(request):
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     mydb = myclient["Test"]
-    mycol="test.csv"
-
-    docdb=list(mydb['sample_submission.csv'].find({},{'_id':0}))
+    
+    filename = list(request.POST)[0]
+    print(filename)
+    docdb=list(mydb[filename].find({},{'_id':0}))
     print(docdb)
-    df = pd.DataFrame(docdb)
-    csvfile=df.to_csv(r"E:\vallari\btech_project\testdb"+"./file.csv", sep=',',index=False)
-
-    return HttpResponse(csvfile)
+   
+    
+    return JsonResponse({"csvlist":docdb})

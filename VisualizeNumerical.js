@@ -100,7 +100,12 @@ setDataBoxplot(){
 handleChange(checked) {
   this.setState({ checked });
   //console.log(checked)
-  axios.post(variables.API_URL+'visualize',  { selected: this.state.selected,dpcheck: checked }).then(response => this.setState({ coordinates: response.data })).then(this.chart.render());
+  axios.post(variables.API_URL+'visualize',  { selected: this.state.selected,dpcheck: checked, grph_type: this.state.type}).then(response => {
+    this.setState({ coordinates: response.data});
+    console.log(response.data)
+  
+}).then(this.chart.render())
+  
 }
 
 handleDisplay=()=>{
@@ -123,7 +128,7 @@ handleDisplay=()=>{
   const dataPoints=this.setDatapoints();
   
   const numericData = this.setNumericalData();
-  const y_boxplot = this.setDataBoxplot();
+  //const y_boxplot = this.setDataBoxplot();
   const display = this.handleDisplay();
   //console.log(y_boxplot)
    const getattributevalue=(event)=>{
@@ -135,12 +140,13 @@ handleDisplay=()=>{
  
    }
   const changeSelectOptionHandler = (event) => {
+
     this.setState({
       selected: event.target.value
   });
   
   
-    axios.post(variables.API_URL+'visualize', { selected: event.target.value,dpcheck: this.state.checked })
+    axios.post(variables.API_URL+'visualize', { selected: event.target.value,dpcheck: this.state.checked , grph_type: this.state.type})
     .then(response => this.setState({ coordinates: response.data }));
     
     this.setState({displayChart: true})
@@ -185,22 +191,22 @@ handleDisplay=()=>{
     },
     axisX: {
       title:"Data points",
-      // crosshair: {
-      //   enabled: true,
-      //   snapToDataPoint: true
-      // }
+       crosshair: {
+         enabled: true,
+         snapToDataPoint: true
+       }
     },
     axisY:{
       title: this.state.selected,
-      // crosshair: {
-      //   enabled: true,
-      //   snapToDataPoint: true
-      // }
+       crosshair: {
+         enabled: true,
+         snapToDataPoint: true
+       }
     },
     data: [{
       type: "scatter",
       markerSize: 15,
-      toolTipContent: "Data Point: {x} Sales: {y}",
+      toolTipContent: "Data Point: {x} : {y}",
       dataPoints: numericData
     }]
   }
@@ -224,17 +230,17 @@ handleDisplay=()=>{
     }]
   }
 
-  const series=[
-    {
-      type: 'boxPlot',
-      data: [
-        {
-          x: this.state.selected,
-          y: y_boxplot
-        }        
-      ]
-    }
-  ]
+  // const series=[
+  //   {
+  //     type: 'boxPlot',
+  //     data: [
+  //       {
+  //         x: this.state.selected,
+  //         y: y_boxplot
+  //       }        
+  //     ]
+  //   }
+  // ]
   
 
   var chartType = options_scatter;
